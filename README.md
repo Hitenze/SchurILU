@@ -52,6 +52,12 @@ All factorizations support:
 - float32, float64, complex64, complex128
 - CSR sparse matrix input
 
+### FSAI0 Preconditioner
+
+- **fsai0**: Factorized Sparse Approximate Inverse (pattern from A)
+  - Builds M = L^T L ≈ A^{-1} from A's sparsity pattern
+  - Suitable for SPD matrices
+
 ### GeMSLR Preconditioner
 
 - **GeMSLR**: General Multilevel Schur Low-Rank preconditioner
@@ -124,8 +130,7 @@ FSAI0 (factorized sparse approximate inverse) preconditioner:
 
 ```python
 import numpy as np
-from schurilu import fgmres
-from schurilu.preconditioners import fsai0
+from schurilu import fgmres, fsai0
 from schurilu.utils import fd3d
 
 # SPD test matrix (e.g., 2D Laplacian)
