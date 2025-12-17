@@ -210,3 +210,95 @@ def fd3d(
     A = A.tocsr()
     A.eliminate_zeros()
     return A
+
+
+def rlap2d(
+    nx: int,
+    ny: int,
+    epsilon: float,
+    theta: float,
+    shift: float = 0.0,
+    dtype: npt.DTypeLike = np.float64,
+    D: float = 1.0,
+) -> csr_matrix:
+    """
+    2D rotated anisotropic Laplacian (9-point) with Dirichlet BC.
+
+    Parameters
+    ----------
+    nx, ny : int
+        Number of grid points in x and y directions.
+    epsilon : float
+        Anisotropy ratio (>0).
+    theta : float
+        Rotation angle in radians.
+    shift : float, optional
+        Diagonal shift. Subtracts shift * I from the matrix.
+    dtype : numpy dtype, optional
+        Data type of the matrix. Default is float64.
+    D : float, optional
+        Diffusion scaling. Default is 1.0.
+
+    Returns
+    -------
+    A : scipy.sparse.csr_matrix
+        (nx*ny) x (nx*ny) sparse matrix in unit scaling.
+    """
+    dtype = np.dtype(dtype)
+
+    C = float(np.cos(theta))
+    S = float(np.sin(theta))
+    CC = C * C
+    SS = S * S
+    CS = C * S
+
+    alpha = epsilon * CC + SS
+    gamma = epsilon * SS + CC
+    beta = (epsilon - 1.0) * CS
+
+    c_n = -D * alpha
+    c_s = -D * alpha
+    c_w = -D * gamma
+    c_e = -D * gamma
+    c_ne = +0.5 * D * beta
+    c_sw = +0.5 * D * beta
+    c_nw = -0.5 * D * beta
+    c_se = -0.5 * D * beta
+    c_c = 2.0 * D * (alpha + gamma)
+
+    n = nx * ny
+    rows: list[int] = []
+    cols: list[int] = []
+    data: list[float] = []
+
+    for j in range(ny):
+        base = j * nx
+        for i in range(nx):
+            r = base + i
+            rows.append(r); cols.append(r); data.append(c_c)
+
+            if i > 0:
+                rows.append(r); cols.append(r - 1); data.append(c_w)
+            if i + 1 < nx:
+                rows.append(r); cols.append(r + 1); data.append(c_e)
+            if j > 0:
+                rows.append(r); cols.append(r - nx); data.append(c_n)
+            if j + 1 < ny:
+                rows.append(r); cols.append(r + nx); data.append(c_s)
+
+            if i + 1 < nx and j > 0:
+                rows.append(r); cols.append(r - nx + 1); data.append(c_ne)
+            if i > 0 and j > 0:
+                rows.append(r); cols.append(r - nx - 1); data.append(c_nw)
+            if i > 0 and j + 1 < ny:
+                rows.append(r); cols.append(r + nx - 1); data.append(c_sw)
+            if i + 1 < nx and j + 1 < ny:
+                rows.append(r); cols.append(r + nx + 1); data.append(c_se)
+
+    A = sparse.csr_matrix((np.asarray(data, dtype=dtype), (np.asarray(rows), np.asarray(cols))), shape=(n, n))
+
+    if shift != 0.0:
+        A = A - shift * eye(n, format="csr", dtype=dtype)
+
+    A.eliminate_zeros()
+    return A

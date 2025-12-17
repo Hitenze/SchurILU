@@ -99,6 +99,46 @@ x, info = fgmres(A, b, M=ilu, tol=1e-10)
 x, info = pcg(A, b, M=ilu, tol=1e-10)
 ```
 
+Rotated anisotropic 2D Laplacian (9‑point):
+
+```python
+import numpy as np
+from schurilu import fgmres
+from schurilu.utils import rlap2d
+
+# 2D rotated anisotropic Laplacian on a 64x64 interior grid
+nx, ny = 64, 64
+epsilon = 3.0       # anisotropy ratio (>0)
+theta = np.pi / 6   # rotation angle (radians)
+
+A = rlap2d(nx, ny, epsilon=epsilon, theta=theta)
+
+# Solve Au = b with a simple ILU(0) preconditioner
+from schurilu import ilu0
+pre = ilu0(A)
+b = np.ones(A.shape[0])
+u, info = fgmres(A, b, M=pre, tol=1e-10)
+```
+
+FSAI0 (factorized sparse approximate inverse) preconditioner:
+
+```python
+import numpy as np
+from schurilu import fgmres
+from schurilu.preconditioners import fsai0
+from schurilu.utils import fd3d
+
+# SPD test matrix (e.g., 2D Laplacian)
+A = fd3d(64, 64, 1)
+
+# Build FSAI0 from A's sparsity pattern
+pre = fsai0(A)
+
+# Use with GMRES/FGMRES
+b = np.ones(A.shape[0])
+x, info = fgmres(A, b, M=pre, tol=1e-10)
+```
+
 ### Schur Complement
 
 ```python

@@ -4,7 +4,7 @@ SchurILU - Incomplete LU factorization with Schur complement support
 A Python package for ILU preconditioners and Krylov solvers.
 """
 
-from schurilu.preconditioners import ilu0, iluk, ilut, ILUResult, GeMSLR, arnoldi
+from schurilu.preconditioners import ilu0, iluk, ilut, ILUResult, GeMSLR, arnoldi, fsai0, FSAI0Result
 from schurilu.krylov import fgmres, fgmrez, pcg, planczos
 from schurilu.reordering import (
     multilevel_partition,
@@ -13,7 +13,7 @@ from schurilu.reordering import (
     connected_components,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     # ILU factorizations
@@ -21,6 +21,8 @@ __all__ = [
     "iluk",
     "ilut",
     "ILUResult",
+    "fsai0",
+    "FSAI0Result",
     # Krylov solvers
     "fgmres",
     "fgmrez",
